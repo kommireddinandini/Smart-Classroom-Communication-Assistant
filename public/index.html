@@ -1,0 +1,1918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Smart Communication Assistant</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #0b1020;
+    color: white;
+}
+
+#app {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* ================= HEADER ================= */
+
+#topbar {
+    height: 58px;
+    min-height: 58px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 10px;
+    background: linear-gradient(
+        90deg,
+        #4338ca,
+        #4f46e5,
+        #7c3aed
+    );
+    box-shadow: 0 2px 10px rgba(0,0,0,.3);
+    z-index: 100;
+}
+
+#brand {
+    flex: 1;
+    min-width: 0;
+}
+
+#brandTitle {
+    font-size: 20px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#status {
+    font-size: 12px;
+    margin-top: 2px;
+    opacity: .9;
+    white-space: nowrap;
+}
+
+button {
+    border: 0;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 14px;
+    font-weight: 700;
+    color: white;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+button:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+}
+
+#openBtn {
+    background: #2563eb;
+}
+
+#prevBtn,
+#nextBtn {
+    width: 40px;
+    padding: 10px 0;
+    font-size: 20px;
+    background: #334155;
+}
+
+#micBtn {
+    background: #16a34a;
+}
+
+#micBtn.active {
+    background: #dc2626;
+}
+
+#fullscreenBtn {
+    background: #7c3aed;
+}
+
+/* ================= MAIN ================= */
+
+#main {
+    flex: 1;
+    min-height: 0;
+    position: relative;
+    display: flex;
+    background: #000;
+    overflow: hidden;
+}
+
+#presentationArea {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    background: #000;
+    overflow: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+}
+
+#presentationArea.empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+    font-size: 18px;
+}
+
+#presentationWrapper {
+    width: 100%;
+    min-height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 12px 12px 200px;
+    position: relative;
+}
+
+#pdfViewer {
+    display: none;
+    width: min(1200px, 96%);
+    height: 85vh;
+    min-height: 600px;
+    border: 0;
+    background: white;
+    box-shadow: 0 0 25px rgba(0,0,0,.45);
+}
+
+#presentationImage {
+    display: none;
+    max-width: 100%;
+    height: auto;
+}
+
+#emptyPresentation {
+    text-align: center;
+    max-width: 650px;
+    padding: 40px;
+}
+
+#emptyPresentation h2 {
+    margin: 0 0 10px;
+    font-size: 24px;
+}
+
+#emptyPresentation p {
+    margin: 0;
+    line-height: 1.6;
+    color: #94a3b8;
+}
+
+/* ================= LEFT CONTROLS ================= */
+
+#sideControls {
+    position: absolute;
+    left: 14px;
+    bottom: 14px;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    padding: 8px;
+    border-radius: 12px;
+    background: rgba(15,23,42,.88);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 8px 25px rgba(0,0,0,.35);
+}
+
+#sideControls button {
+    width: 44px;
+    height: 42px;
+    padding: 0;
+    font-size: 20px;
+}
+
+/* ================= CAPTIONS ================= */
+
+#captionPanel {
+    position: absolute;
+    left: 50%;
+    bottom: 14px;
+    transform: translateX(-50%);
+    width: min(900px, calc(100% - 120px));
+    z-index: 80;
+    pointer-events: none;
+}
+
+#captionBox {
+    width: 100%;
+    padding: 15px 24px 17px;
+    border-radius: 12px;
+    background: rgba(0,0,0,.90);
+    box-shadow: 0 5px 25px rgba(0,0,0,.5);
+    text-align: center;
+}
+
+#englishCaption {
+    min-height: 34px;
+    color: #fff;
+    font-size: clamp(20px, 2.4vw, 34px);
+    line-height: 1.35;
+    font-weight: 700;
+    word-wrap: break-word;
+    overflow-wrap: anywhere;
+}
+
+#secondaryCaption {
+    min-height: 30px;
+    margin-top: 7px;
+    color: #dbeafe;
+    font-size: clamp(18px, 2vw, 28px);
+    line-height: 1.35;
+    font-weight: 500;
+    word-wrap: break-word;
+    overflow-wrap: anywhere;
+}
+
+/* ================= LANGUAGE ================= */
+
+#languagePanel {
+    position: absolute;
+    right: 14px;
+    bottom: 14px;
+    z-index: 90;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px;
+    border-radius: 10px;
+    background: rgba(15,23,42,.94);
+    box-shadow: 0 8px 25px rgba(0,0,0,.35);
+}
+
+#languageLabel {
+    font-size: 12px;
+    color: #e2e8f0;
+}
+
+#languageInput {
+    width: 145px;
+    height: 34px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 7px;
+    outline: none;
+    font-size: 14px;
+}
+
+#languageApply {
+    height: 34px;
+    padding: 0 13px;
+    background: #4f46e5;
+}
+
+#languageRemove {
+    height: 34px;
+    padding: 0 10px;
+    background: #475569;
+}
+
+/* ================= TOAST ================= */
+
+#toast {
+    position: fixed;
+    top: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 500;
+    max-width: calc(100% - 30px);
+    padding: 10px 16px;
+    border-radius: 8px;
+    background: #1e293b;
+    color: white;
+    font-size: 14px;
+    display: none;
+    box-shadow: 0 8px 25px rgba(0,0,0,.4);
+}
+
+#toast.error {
+    background: #991b1b;
+}
+
+#toast.success {
+    background: #166534;
+}
+
+/* ================= FULLSCREEN ================= */
+
+#app:fullscreen {
+    width: 100vw;
+    height: 100vh;
+}
+
+#app:fullscreen #captionBox {
+    background: rgba(0,0,0,.94);
+}
+
+@media(max-width:800px) {
+
+    #topbar {
+        height: auto;
+        min-height: 58px;
+        flex-wrap: wrap;
+        padding: 7px;
+    }
+
+    #brand {
+        width: 100%;
+        flex-basis: 100%;
+    }
+
+    #brandTitle {
+        font-size: 17px;
+    }
+
+    button {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+
+    #captionPanel {
+        width: calc(100% - 30px);
+        bottom: 12px;
+    }
+
+    #captionBox {
+        padding: 11px 14px;
+    }
+
+    #englishCaption {
+        font-size: 19px;
+    }
+
+    #secondaryCaption {
+        font-size: 17px;
+    }
+
+    #languagePanel {
+        right: 8px;
+        bottom: 8px;
+    }
+
+    #languageInput {
+        width: 110px;
+    }
+
+    #sideControls {
+        left: 8px;
+        bottom: 8px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div id="app">
+
+<header id="topbar">
+
+    <div id="brand">
+
+        <div id="brandTitle">
+            🎓 AI Smart Communication Assistant
+        </div>
+
+        <div id="status">
+            Live captions disconnected
+        </div>
+
+    </div>
+
+    <input
+        type="file"
+        id="fileInput"
+        accept=".ppt,.pptx,.pdf,.doc,.docx"
+        hidden
+    >
+
+    <button id="openBtn">
+        📂 Open PPT/PDF
+    </button>
+
+    <button id="prevBtn">
+        ↑
+    </button>
+
+    <button id="nextBtn">
+        ↓
+    </button>
+
+    <button id="micBtn">
+        🎤 Start Mic
+    </button>
+
+    <button id="fullscreenBtn">
+        ⛶ Fullscreen
+    </button>
+
+</header>
+
+
+<main id="main">
+
+<section id="presentationArea" class="empty">
+
+    <div id="presentationWrapper">
+
+        <div id="emptyPresentation">
+
+            <h2>
+                Open your presentation
+            </h2>
+
+            <p>
+                Upload PPT, PPTX, PDF, DOC or DOCX.
+                The presentation will appear here.
+                You can scroll using touch,
+                mouse wheel or arrow controls.
+            </p>
+
+        </div>
+
+        <iframe
+            id="pdfViewer"
+            title="Presentation"
+        ></iframe>
+
+        <img
+            id="presentationImage"
+            alt="Presentation"
+        >
+
+    </div>
+
+
+    <!-- LEFT BOTTOM CONTROLS -->
+
+    <div id="sideControls">
+
+        <button id="scrollUpBtn">
+            ↑
+        </button>
+
+        <button id="scrollDownBtn">
+            ↓
+        </button>
+
+    </div>
+
+
+    <!-- CAPTIONS -->
+
+    <div id="captionPanel">
+
+        <div id="captionBox">
+
+            <!-- ALWAYS SIMPLE ENGLISH -->
+
+            <div
+                id="englishCaption"
+                aria-live="polite"
+            ></div>
+
+            <!-- SELECTED LANGUAGE -->
+
+            <div
+                id="secondaryCaption"
+                aria-live="polite"
+            ></div>
+
+        </div>
+
+    </div>
+
+
+    <!-- LANGUAGE -->
+
+    <div id="languagePanel">
+
+        <span id="languageLabel">
+            + Language
+        </span>
+
+        <input
+            id="languageInput"
+            type="text"
+            placeholder="e.g. Telugu"
+            autocomplete="off"
+        >
+
+        <button id="languageApply">
+            Apply
+        </button>
+
+        <button
+            id="languageRemove"
+            title="Remove second language"
+        >
+            ×
+        </button>
+
+    </div>
+
+</section>
+
+</main>
+
+</div>
+
+<div id="toast"></div>
+
+
+<script>
+"use strict";
+
+/* =========================================================
+   ELEMENTS
+========================================================= */
+
+const app =
+    document.getElementById("app");
+
+const statusElement =
+    document.getElementById("status");
+
+const fileInput =
+    document.getElementById("fileInput");
+
+const openBtn =
+    document.getElementById("openBtn");
+
+const prevBtn =
+    document.getElementById("prevBtn");
+
+const nextBtn =
+    document.getElementById("nextBtn");
+
+const micBtn =
+    document.getElementById("micBtn");
+
+const fullscreenBtn =
+    document.getElementById("fullscreenBtn");
+
+const presentationArea =
+    document.getElementById("presentationArea");
+
+const emptyPresentation =
+    document.getElementById("emptyPresentation");
+
+const pdfViewer =
+    document.getElementById("pdfViewer");
+
+const englishCaption =
+    document.getElementById("englishCaption");
+
+const secondaryCaption =
+    document.getElementById("secondaryCaption");
+
+const languageInput =
+    document.getElementById("languageInput");
+
+const languageApply =
+    document.getElementById("languageApply");
+
+const languageRemove =
+    document.getElementById("languageRemove");
+
+const scrollUpBtn =
+    document.getElementById("scrollUpBtn");
+
+const scrollDownBtn =
+    document.getElementById("scrollDownBtn");
+
+const toast =
+    document.getElementById("toast");
+
+
+/* =========================================================
+   STATE
+========================================================= */
+
+let socket = null;
+
+let audioContext = null;
+
+let mediaStream = null;
+
+let processor = null;
+
+let source = null;
+
+let micRunning = false;
+
+let selectedLanguage = "";
+
+
+/* =========================================================
+   TOAST
+========================================================= */
+
+let toastTimer = null;
+
+function showToast(message, type = "") {
+
+    clearTimeout(toastTimer);
+
+    toast.textContent = message;
+
+    toast.className = type;
+
+    toast.style.display = "block";
+
+    toastTimer = setTimeout(() => {
+
+        toast.style.display = "none";
+
+    }, 3000);
+}
+
+
+/* =========================================================
+   STATUS
+========================================================= */
+
+function setStatus(text) {
+
+    statusElement.textContent = text;
+
+}
+
+
+/* =========================================================
+   FILE OPEN
+========================================================= */
+
+openBtn.addEventListener("click", () => {
+
+    fileInput.click();
+
+});
+
+
+fileInput.addEventListener(
+    "change",
+    async () => {
+
+        const file =
+            fileInput.files?.[0];
+
+        if (!file) {
+            return;
+        }
+
+        await uploadPresentation(file);
+
+        fileInput.value = "";
+
+    }
+);
+
+
+/* =========================================================
+   UPLOAD
+========================================================= */
+
+async function uploadPresentation(file) {
+
+    try {
+
+        openBtn.disabled = true;
+
+        setStatus(
+            "Uploading presentation..."
+        );
+
+        const formData =
+            new FormData();
+
+        formData.append(
+            "document",
+            file
+        );
+
+        const response =
+            await fetch(
+                "/api/upload",
+                {
+                    method: "POST",
+                    body: formData
+                }
+            );
+
+        const data =
+            await response.json();
+
+        if (
+            !response.ok ||
+            !data.success
+        ) {
+
+            throw new Error(
+                data.error ||
+                "Could not upload presentation."
+            );
+
+        }
+
+        pdfViewer.src =
+            data.pdfUrl +
+            "#toolbar=0&navpanes=0&scrollbar=1";
+
+        pdfViewer.style.display =
+            "block";
+
+        emptyPresentation.style.display =
+            "none";
+
+        presentationArea.classList.remove(
+            "empty"
+        );
+
+        setStatus(
+            "Presentation loaded"
+        );
+
+        showToast(
+            "Presentation loaded successfully.",
+            "success"
+        );
+
+    } catch (error) {
+
+        console.error(
+            "UPLOAD ERROR:",
+            error
+        );
+
+        setStatus(
+            "Presentation upload failed"
+        );
+
+        showToast(
+            error.message ||
+            "Could not open presentation.",
+            "error"
+        );
+
+    } finally {
+
+        openBtn.disabled = false;
+
+    }
+}
+
+
+/* =========================================================
+   PRESENTATION SCROLL
+========================================================= */
+
+function scrollPresentation(amount) {
+
+    presentationArea.scrollBy({
+        top: amount,
+        left: 0,
+        behavior: "smooth"
+    });
+
+}
+
+
+prevBtn.addEventListener(
+    "click",
+    () => {
+
+        scrollPresentation(
+            -window.innerHeight * 0.75
+        );
+
+    }
+);
+
+
+nextBtn.addEventListener(
+    "click",
+    () => {
+
+        scrollPresentation(
+            window.innerHeight * 0.75
+        );
+
+    }
+);
+
+
+scrollUpBtn.addEventListener(
+    "click",
+    () => {
+
+        scrollPresentation(
+            -window.innerHeight * 0.75
+        );
+
+    }
+);
+
+
+scrollDownBtn.addEventListener(
+    "click",
+    () => {
+
+        scrollPresentation(
+            window.innerHeight * 0.75
+        );
+
+    }
+);
+
+
+/* =========================================================
+   KEYBOARD
+========================================================= */
+
+document.addEventListener(
+    "keydown",
+    event => {
+
+        if (
+            event.key === "ArrowDown" ||
+            event.key === "PageDown"
+        ) {
+
+            scrollPresentation(
+                window.innerHeight * 0.75
+            );
+
+        }
+
+        if (
+            event.key === "ArrowUp" ||
+            event.key === "PageUp"
+        ) {
+
+            scrollPresentation(
+                -window.innerHeight * 0.75
+            );
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   FULLSCREEN
+========================================================= */
+
+fullscreenBtn.addEventListener(
+    "click",
+    async () => {
+
+        try {
+
+            if (!document.fullscreenElement) {
+
+                await app.requestFullscreen();
+
+            } else {
+
+                await document.exitFullscreen();
+
+            }
+
+        } catch (error) {
+
+            console.error(
+                "Fullscreen error:",
+                error
+            );
+
+            showToast(
+                "Fullscreen is not available.",
+                "error"
+            );
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   WEBSOCKET URL
+========================================================= */
+
+function getWebSocketURL() {
+
+    const protocol =
+        location.protocol === "https:"
+            ? "wss:"
+            : "ws:";
+
+    return (
+        protocol +
+        "//" +
+        location.host +
+        "/live"
+    );
+
+}
+
+
+/* =========================================================
+   CONNECT SOCKET
+========================================================= */
+
+function connectSocket() {
+
+    if (
+        socket &&
+        (
+            socket.readyState === WebSocket.OPEN ||
+            socket.readyState === WebSocket.CONNECTING
+        )
+    ) {
+
+        return;
+
+    }
+
+    setStatus(
+        "Connecting to Gemini..."
+    );
+
+    socket =
+        new WebSocket(
+            getWebSocketURL()
+        );
+
+
+    socket.onopen = () => {
+
+        setStatus(
+            "Live captions connected"
+        );
+
+        showToast(
+            "Live captions connected.",
+            "success"
+        );
+
+        if (selectedLanguage) {
+
+            sendLanguage(
+                selectedLanguage
+            );
+
+        }
+
+    };
+
+
+    socket.onmessage = event => {
+
+        let data;
+
+        try {
+
+            data =
+                JSON.parse(
+                    event.data
+                );
+
+        } catch (error) {
+
+            console.error(
+                "Invalid server message:",
+                event.data
+            );
+
+            return;
+
+        }
+
+        handleSocketMessage(data);
+
+    };
+
+
+    socket.onerror = error => {
+
+        console.error(
+            "WebSocket error:",
+            error
+        );
+
+        setStatus(
+            "Live connection error"
+        );
+
+    };
+
+
+    socket.onclose = () => {
+
+        setStatus(
+            "Live captions disconnected"
+        );
+
+        if (micRunning) {
+
+            stopMicrophone();
+
+        }
+
+    };
+
+}
+
+
+/* =========================================================
+   SOCKET MESSAGE HANDLER
+========================================================= */
+
+function handleSocketMessage(data) {
+
+    console.log(
+        "SERVER MESSAGE:",
+        data
+    );
+
+
+    /* =====================================================
+       NEW FORMAT FROM UPDATED SERVER
+
+       {
+           type: "captions",
+           english: "...",
+           secondary: "...",
+           language: "Telugu"
+       }
+    ===================================================== */
+
+    if (
+        data.type === "captions"
+    ) {
+
+        /*
+         * FIRST LINE:
+         * ALWAYS ENGLISH
+         */
+
+        if (
+            typeof data.english === "string"
+        ) {
+
+            englishCaption.textContent =
+                data.english;
+
+        }
+
+
+        /*
+         * SECOND LINE:
+         * SELECTED LANGUAGE
+         */
+
+        if (
+            typeof data.secondary === "string"
+        ) {
+
+            secondaryCaption.textContent =
+                data.secondary;
+
+        }
+
+
+        /*
+         * If no second language is selected,
+         * keep second line empty.
+         */
+
+        if (
+            !selectedLanguage
+        ) {
+
+            secondaryCaption.textContent =
+                "";
+
+        }
+
+
+        return;
+
+    }
+
+
+    /* =====================================================
+       LEGACY ENGLISH FORMAT
+    ===================================================== */
+
+    if (
+        data.type === "english" ||
+        data.type === "englishFinal"
+    ) {
+
+        if (
+            typeof data.text === "string"
+        ) {
+
+            englishCaption.textContent =
+                data.text;
+
+        }
+
+        return;
+
+    }
+
+
+    /* =====================================================
+       LEGACY SECONDARY FORMAT
+    ===================================================== */
+
+    if (
+        data.type === "secondary"
+    ) {
+
+        if (
+            typeof data.text === "string"
+        ) {
+
+            secondaryCaption.textContent =
+                data.text;
+
+        }
+
+        return;
+
+    }
+
+
+    /* =====================================================
+       INPUT TRANSCRIPT
+
+       NEVER put this into English caption.
+    ===================================================== */
+
+    if (
+        data.type === "inputTranscript" ||
+        data.type === "input"
+    ) {
+
+        console.log(
+            "Teacher speech:",
+            data.text
+        );
+
+        return;
+
+    }
+
+
+    /* =====================================================
+       LANGUAGE CHANGED
+    ===================================================== */
+
+    if (
+        data.type === "languageChanged"
+    ) {
+
+        selectedLanguage =
+            data.language || "";
+
+        if (!selectedLanguage) {
+
+            secondaryCaption.textContent =
+                "";
+
+        }
+
+        return;
+
+    }
+
+
+    /* =====================================================
+       CONNECTED
+    ===================================================== */
+
+    if (
+        data.type === "connected"
+    ) {
+
+        setStatus(
+            "Live captions connected"
+        );
+
+        return;
+
+    }
+
+
+    /* =====================================================
+       INFO
+    ===================================================== */
+
+    if (
+        data.type === "info"
+    ) {
+
+        setStatus(
+            data.text ||
+            "Connecting..."
+        );
+
+        return;
+
+    }
+
+
+    /* =====================================================
+       TURN COMPLETE
+    ===================================================== */
+
+    if (
+        data.type === "turnComplete"
+    ) {
+
+        return;
+
+    }
+
+
+    /* =====================================================
+       ERROR
+    ===================================================== */
+
+    if (
+        data.type === "error"
+    ) {
+
+        console.error(
+            "Gemini error:",
+            data.text
+        );
+
+        setStatus(
+            "Live connection error"
+        );
+
+        showToast(
+            data.text ||
+            "Gemini connection error.",
+            "error"
+        );
+
+        return;
+
+    }
+
+}
+
+
+/* =========================================================
+   LANGUAGE
+========================================================= */
+
+function sendLanguage(language) {
+
+    if (
+        !socket ||
+        socket.readyState !== WebSocket.OPEN
+    ) {
+
+        return;
+
+    }
+
+    socket.send(
+        JSON.stringify({
+            type: "language",
+            language: language
+        })
+    );
+
+}
+
+
+languageApply.addEventListener(
+    "click",
+    () => {
+
+        const language =
+            languageInput.value.trim();
+
+        if (!language) {
+
+            showToast(
+                "Enter a language, for example Telugu.",
+                "error"
+            );
+
+            return;
+
+        }
+
+        selectedLanguage =
+            language;
+
+        secondaryCaption.textContent =
+            "";
+
+        sendLanguage(
+            language
+        );
+
+        showToast(
+            language +
+            " selected.",
+            "success"
+        );
+
+    }
+);
+
+
+languageInput.addEventListener(
+    "keydown",
+    event => {
+
+        if (
+            event.key === "Enter"
+        ) {
+
+            languageApply.click();
+
+        }
+
+    }
+);
+
+
+languageRemove.addEventListener(
+    "click",
+    () => {
+
+        selectedLanguage =
+            "";
+
+        languageInput.value =
+            "";
+
+        secondaryCaption.textContent =
+            "";
+
+        sendLanguage("");
+
+        showToast(
+            "Second language removed."
+        );
+
+    }
+);
+
+
+/* =========================================================
+   AUDIO HELPERS
+========================================================= */
+
+function floatTo16BitPCM(
+    float32Array
+) {
+
+    const output =
+        new Int16Array(
+            float32Array.length
+        );
+
+    for (
+        let i = 0;
+        i < float32Array.length;
+        i++
+    ) {
+
+        let sample =
+            float32Array[i];
+
+        sample =
+            Math.max(
+                -1,
+                Math.min(
+                    1,
+                    sample
+                )
+            );
+
+        output[i] =
+            sample < 0
+                ? sample * 0x8000
+                : sample * 0x7fff;
+
+    }
+
+    return output;
+
+}
+
+
+function arrayBufferToBase64(buffer) {
+
+    const bytes =
+        new Uint8Array(buffer);
+
+    let binary = "";
+
+    const chunkSize = 0x8000;
+
+    for (
+        let i = 0;
+        i < bytes.length;
+        i += chunkSize
+    ) {
+
+        const chunk =
+            bytes.subarray(
+                i,
+                i + chunkSize
+            );
+
+        binary +=
+            String.fromCharCode(
+                ...chunk
+            );
+
+    }
+
+    return btoa(binary);
+
+}
+
+
+function resampleTo16k(
+    input,
+    inputSampleRate
+) {
+
+    const targetSampleRate =
+        16000;
+
+    if (
+        inputSampleRate ===
+        targetSampleRate
+    ) {
+
+        return input;
+
+    }
+
+    const ratio =
+        inputSampleRate /
+        targetSampleRate;
+
+    const newLength =
+        Math.round(
+            input.length /
+            ratio
+        );
+
+    const output =
+        new Float32Array(
+            newLength
+        );
+
+    for (
+        let i = 0;
+        i < output.length;
+        i++
+    ) {
+
+        const start =
+            Math.floor(
+                i * ratio
+            );
+
+        const end =
+            Math.min(
+                Math.floor(
+                    (i + 1) * ratio
+                ),
+                input.length
+            );
+
+        let sum = 0;
+        let count = 0;
+
+        for (
+            let j = start;
+            j < end;
+            j++
+        ) {
+
+            sum += input[j];
+            count++;
+
+        }
+
+        output[i] =
+            count
+                ? sum / count
+                : 0;
+
+    }
+
+    return output;
+
+}
+
+
+/* =========================================================
+   SEND AUDIO
+========================================================= */
+
+function sendAudio(
+    floatData,
+    sampleRate
+) {
+
+    if (
+        !socket ||
+        socket.readyState !== WebSocket.OPEN
+    ) {
+
+        return;
+
+    }
+
+    const resampled =
+        resampleTo16k(
+            floatData,
+            sampleRate
+        );
+
+    const pcm =
+        floatTo16BitPCM(
+            resampled
+        );
+
+    const base64 =
+        arrayBufferToBase64(
+            pcm.buffer
+        );
+
+    socket.send(
+        JSON.stringify({
+            type: "audio",
+            data: base64
+        })
+    );
+
+}
+
+
+/* =========================================================
+   WAIT SOCKET
+========================================================= */
+
+function waitForSocket() {
+
+    return new Promise(
+        (resolve, reject) => {
+
+            const start =
+                Date.now();
+
+            const timeout =
+                10000;
+
+            const timer =
+                setInterval(
+                    () => {
+
+                        if (
+                            socket &&
+                            socket.readyState ===
+                                WebSocket.OPEN
+                        ) {
+
+                            clearInterval(timer);
+
+                            resolve();
+
+                            return;
+
+                        }
+
+                        if (
+                            socket &&
+                            socket.readyState ===
+                                WebSocket.CLOSED
+                        ) {
+
+                            clearInterval(timer);
+
+                            reject(
+                                new Error(
+                                    "Live connection closed."
+                                )
+                            );
+
+                            return;
+
+                        }
+
+                        if (
+                            Date.now() - start >
+                            timeout
+                        ) {
+
+                            clearInterval(timer);
+
+                            reject(
+                                new Error(
+                                    "Could not connect to live captions."
+                                )
+                            );
+
+                        }
+
+                    },
+                    100
+                );
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   START MICROPHONE
+========================================================= */
+
+async function startMicrophone() {
+
+    try {
+
+        connectSocket();
+
+        if (
+            !socket ||
+            socket.readyState !==
+                WebSocket.OPEN
+        ) {
+
+            await waitForSocket();
+
+        }
+
+        mediaStream =
+            await navigator
+                .mediaDevices
+                .getUserMedia({
+                    audio: {
+                        channelCount: 1,
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
+                    }
+                });
+
+
+        audioContext =
+            new (
+                window.AudioContext ||
+                window.webkitAudioContext
+            )();
+
+
+        await audioContext.resume();
+
+
+        source =
+            audioContext
+                .createMediaStreamSource(
+                    mediaStream
+                );
+
+
+        processor =
+            audioContext
+                .createScriptProcessor(
+                    4096,
+                    1,
+                    1
+                );
+
+
+        processor.onaudioprocess =
+            event => {
+
+                if (!micRunning) {
+                    return;
+                }
+
+                const input =
+                    event.inputBuffer
+                        .getChannelData(0);
+
+                const copy =
+                    new Float32Array(
+                        input.length
+                    );
+
+                copy.set(input);
+
+                sendAudio(
+                    copy,
+                    audioContext.sampleRate
+                );
+
+            };
+
+
+        source.connect(
+            processor
+        );
+
+        processor.connect(
+            audioContext.destination
+        );
+
+
+        micRunning =
+            true;
+
+        micBtn.classList.add(
+            "active"
+        );
+
+        micBtn.textContent =
+            "⏹ Stop Mic";
+
+        setStatus(
+            "Listening for teacher speech..."
+        );
+
+        showToast(
+            "Microphone ON.",
+            "success"
+        );
+
+    } catch (error) {
+
+        console.error(
+            "MIC ERROR:",
+            error
+        );
+
+        stopMicrophone();
+
+        showToast(
+            error.message ||
+            "Could not start microphone.",
+            "error"
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   STOP MICROPHONE
+========================================================= */
+
+function stopMicrophone() {
+
+    micRunning =
+        false;
+
+
+    if (processor) {
+
+        try {
+            processor.disconnect();
+        } catch (_) {}
+
+        processor = null;
+
+    }
+
+
+    if (source) {
+
+        try {
+            source.disconnect();
+        } catch (_) {}
+
+        source = null;
+
+    }
+
+
+    if (mediaStream) {
+
+        mediaStream
+            .getTracks()
+            .forEach(
+                track => track.stop()
+            );
+
+        mediaStream = null;
+
+    }
+
+
+    if (audioContext) {
+
+        try {
+            audioContext.close();
+        } catch (_) {}
+
+        audioContext = null;
+
+    }
+
+
+    micBtn.classList.remove(
+        "active"
+    );
+
+    micBtn.textContent =
+        "🎤 Start Mic";
+
+    setStatus(
+        "Microphone stopped"
+    );
+
+}
+
+
+/* =========================================================
+   MIC BUTTON
+========================================================= */
+
+micBtn.addEventListener(
+    "click",
+    async () => {
+
+        if (micRunning) {
+
+            stopMicrophone();
+
+            return;
+
+        }
+
+        await startMicrophone();
+
+    }
+);
+
+
+/* =========================================================
+   INITIALIZE
+========================================================= */
+
+englishCaption.textContent =
+    "";
+
+secondaryCaption.textContent =
+    "";
+
+setStatus(
+    "Connecting to live captions..."
+);
+
+connectSocket();
+
+</script>
+
+</body>
+</html>

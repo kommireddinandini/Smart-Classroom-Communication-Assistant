@@ -1,0 +1,15 @@
+{
+  "name": "ai-smart-communication-assistant",
+  "version": "1.0.0",
+  "description": "AI Smart Communication Assistant",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "multer": "^1.4.5-lts.1",
+    "ws": "^8.18.0"
+  }
+}
